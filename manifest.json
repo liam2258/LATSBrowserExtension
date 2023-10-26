@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "DHH Lexical Text Simplifier",
+  "version": "1.0",
+  "description": "An extension to simplify web text for the deaf and hard of hearing",
+  "host_permissions": ["<all_urls>"],
+  "permissions": ["scripting","activeTab"],
+  "background": {
+    "service_worker": "serviceWorker.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"]
+    }
+  ]
+}
+
+  
