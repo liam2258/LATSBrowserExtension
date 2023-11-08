@@ -2,7 +2,15 @@
 //const elements = document.querySelectorAll('*');
 const elements = document.querySelectorAll('h1, h2, h3, h4, h5, p, a, caption, span, td');
 
-import posTagger from 'wink-pos-tagger';
+// var posTagger = require( 'wink-pos-tagger' );
+// var tagger = posTagger();
+
+// Load "wink-nlp" package.
+const winkNLP = require('wink-nlp');
+// Load english language model — light version.
+const model = require('wink-eng-lite-web-model');
+// Instantiate wink-nlp.
+const nlp = winkNLP(model);
 
 // Iterate over each element
 elements.forEach(element => {
@@ -25,6 +33,10 @@ elements.forEach(element => {
     let pronounce1 = string.includes("g") || string.includes("j") ? 1 : 0;
 
     let pronounce2 = string.includes("c") || string.includes("k") ? 1 : 0;
+
+    let doc = nlp.readDoc(text);
+    let t1 = doc.tokens().itemAt(0);
+    let posValue = t1.out(nlp.its.pos);
 
     // If the word is longer than 10 characters, add the span class
     if (word.length > 10) {
