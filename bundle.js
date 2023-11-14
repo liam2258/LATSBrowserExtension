@@ -1,10 +1,26 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-// Get all elements on the page
-//const elements = document.querySelectorAll('*');
-const elements = document.querySelectorAll('h1, h2, h3, h4, h5, p, a, caption, span, td');
+//Function to get amount of syllables in word
+function new_count(word) {
+  if (word.length === 0) { return 0; }
+  word = word.toLowerCase();
+  if (word.length <= 3) { return 1; }
+  word = word.replace(' ', '&#13');
+  word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+  word = word.replace(/^y/, '');
 
-// var posTagger = require( 'wink-pos-tagger' );
-// var tagger = posTagger();
+  // Use try-catch block to handle the potential null value from match()
+  try {
+    const matches = word.match(/[aeiouy]{1,2}/g);
+    // If matches is null or undefined, return 0 or the length accordingly
+    return matches ? matches.length : 0;
+  } catch (error) {
+    console.error('Error in counting syllables:', error);
+    return 0; // Return 0 in case of an error
+  }
+}
+
+// Get all elements on the page
+const elements = document.querySelectorAll('h1, h2, h3, h4, h5, p, a, caption, span, td');
 
 // Load "wink-nlp" package.
 const winkNLP = require('wink-nlp');
@@ -18,33 +34,44 @@ elements.forEach(element => {
   // Get the inner text of the element
   const text = element.innerText;
 
-  // Split the text into words
-  const words = text.split(' ');
+  // Check if text is defined and not empty
+  if (text && text.trim() !== '') {
+    // Split the text into words
+    const words = text.split(' ');
 
-  // Iterate over each word
-  words.forEach(word => {
-    // Extract the features needed for our ML model from each word
-    let length = word.length;
+    // Iterate over each word
+    words.forEach(word => {
+      // Extract the features needed for our ML model from each word
+      let length = word.length;
 
-    let syllableCount = 0;
+      if (word.length > 10) {
+        let syllableCount = new_count(word);
 
-    // Extract presence_of_ch,sh,th,st, or f
-    let presence = string.includes("ch") || string.includes("sh") || string.includes("th") || string.includes("st") || string.includes("f") ? 1 : 0;
+        // Extract presence_of_ch, sh, th, st, or f
+        let presence = word.includes("ch") || word.includes("sh") || word.includes("th") || word.includes("st") || word.includes("f") ? 1 : 0;
 
-    let pronounce1 = string.includes("g") || string.includes("j") ? 1 : 0;
+        let pronounce1 = word.includes("g") || word.includes("j") ? 1 : 0;
 
-    let pronounce2 = string.includes("c") || string.includes("k") ? 1 : 0;
+        let pronounce2 = word.includes("c") || word.includes("k") ? 1 : 0;
 
-    posResults = nlp.tagSentence(word);
-    const posValue = posResults[0].pos;
+        // Check if the text is suitable for nlp.readDoc
+        if (text && text.trim() !== '') {
+          let doc = nlp.readDoc(text);
+          let t1 = doc.tokens().itemAt(0);
+          let posValue = t1.out(nlp.its.pos);
 
-    // If the word is longer than 10 characters, add the span class
-    if (word.length > 10) {
-      element.innerHTML = element.innerHTML.replace(word, `<span class="blue">${word}</span>`);
-    }
-  });
+          console.log(posValue);
+          console.log(syllableCount);
+        }
+      }
+
+      // If the word is longer than 10 characters, add the span class
+      if (word.length > 10) {
+        element.innerHTML = element.innerHTML.replace(word, `<span class="blue">${word}</span>`);
+      }
+    });
+  }
 });
-
 },{"wink-eng-lite-web-model":20,"wink-nlp":76}],2:[function(require,module,exports){
 const transformers=new Array(1),constants=require("./constants.js");var tkSize=constants.tkSize,bits4lemma=constants.bits4lemma,posMask=constants.posMask;transformers[0]=function(t,itsUndefined,config,index){var normal,cache=config.rdd.cache,tokens=config.rdd.tokens,preserve=config.preserve,value=cache.value(tokens[index*tkSize]);return"string"==typeof t?t:preserve[value]?preserve[value]:!config.matchValue&&preserve[normal=cache.value(t)]?preserve[normal]:config.usePOS?cache.valueOf("pos",(tokens[index*tkSize+2]&posMask)>>>bits4lemma):config.matchValue?value:normal},module.exports=transformers;
 },{"./constants.js":3}],3:[function(require,module,exports){
