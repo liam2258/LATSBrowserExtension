@@ -5,9 +5,6 @@
   "description": "An extension to simplify web text for the deaf and hard of hearing",
   "host_permissions": ["<all_urls>"],
   "permissions": ["scripting","activeTab"],
-  "background": {
-    "service_worker": "serviceWorker.js"
-  },
   "action": {
     "default_popup": "popup.html"
   },

@@ -1,5 +1,94 @@
-//Function to get amount of syllables in word
-function new_count(word) {
+const winkNLP = require('wink-nlp');
+const model = require('wink-eng-lite-web-model');
+const nlp = winkNLP(model);
+
+// Converted ML model into giant if-else statement, this saves a lot of space
+function get_difficulty(no_of_char, syllable_count, presence_of_ch_sh_th_st_f, part_of_speech, Pronounce_c_k, pronounce_g_j) {
+  if (no_of_char <= 0.50) {
+      if (syllable_count <= 0.50) {
+          if (presence_of_ch_sh_th_st_f <= 0.50) {
+              if (part_of_speech <= 1.50) {
+                  if (Pronounce_c_k <= 0.50) {
+                      return 0;
+                  } else {
+                      return 0;
+                  }
+              } else {
+                  if (Pronounce_c_k <= 0.50) {
+                      return 0;
+                  } else {
+                      return 0;
+                  }
+              }
+          } else {
+              if (Pronounce_c_k <= 0.50) {
+                  if (pronounce_g_j <= 0.50) {
+                      return 0;
+                  } else {
+                      return 0;
+                  }
+              } else {
+                  return 1;
+              }
+          }
+      } else {
+          if (part_of_speech <= 2.00) {
+              if (pronounce_g_j <= 0.50) {
+                  if (Pronounce_c_k <= 0.50) {
+                      return 0;
+                  } else {
+                      return 0;
+                  }
+              } else {
+                  return 1;
+              }
+          } else {
+              return 1;
+          }
+      }
+  } else {
+      if (syllable_count <= 0.50) {
+          if (presence_of_ch_sh_th_st_f <= 0.50) {
+              if (Pronounce_c_k <= 0.50) {
+                  if (part_of_speech <= 1.50) {
+                      return 0;
+                  } else {
+                      return 1;
+                  }
+              } else {
+                  if (part_of_speech <= 1.50) {
+                      return 1;
+                  } else {
+                      return 1;
+                  }
+              }
+          } else {
+              if (part_of_speech <= 2.50) {
+                  return 1;
+              } else {
+                  return 1;
+              }
+          }
+      } else {
+          if (Pronounce_c_k <= 0.50) {
+              if (pronounce_g_j <= 0.50) {
+                  if (part_of_speech <= 2.50) {
+                      return 1;
+                  } else {
+                      return 1;
+                  }
+              } else {
+                  return 1;
+              }
+          } else {
+              return 1;
+          }
+      }
+  }
+}
+
+// Function to count syllables in word
+function get_syllable_count(word) {
   if (word.length === 0) { return 0; }
   word = word.toLowerCase();
   if (word.length <= 3) { return 1; }
@@ -18,56 +107,77 @@ function new_count(word) {
   }
 }
 
-// Get all elements on the page
-const elements = document.querySelectorAll('h1, h2, h3, h4, h5, p, a, caption, span, td');
+// Recursive function to handle each node of text from web page
+function handleTextNodes(node) {
 
-// Load "wink-nlp" package.
-const winkNLP = require('wink-nlp');
-// Load english language model — light version.
-const model = require('wink-eng-lite-web-model');
-// Instantiate wink-nlp.
-const nlp = winkNLP(model);
+  // Only modify pure text nodes
+  if (
+      node.nodeType === Node.TEXT_NODE &&
+      (node.parentNode.tagName === 'H1' ||
+          node.parentNode.tagName === 'H2' ||
+          node.parentNode.tagName === 'H3' ||
+          node.parentNode.tagName === 'H4' ||
+          node.parentNode.tagName === 'H5' ||
+          node.parentNode.tagName === 'P' ||
+          node.parentNode.tagName === 'A' ||
+          node.parentNode.tagName === 'CAPTION' ||
+          node.parentNode.tagName === 'SPAN' ||
+          node.parentNode.tagName === 'TD')
+  ) {
 
-// Iterate over each element
-elements.forEach(element => {
-  // Get the inner text of the element
-  const text = element.innerText;
+      // Split the text content into words by space
+      const words = node.textContent.split(/\s+/);
 
-  // Check if text is defined and not empty
-  if (text && text.trim() !== '') {
-    // Split the text into words
-    const words = text.split(' ');
+      // Loop through each word
+      const modifiedWords = words.map(word => {
+        if (!word) {
+          return word;
+        }
 
-    // Iterate over each word
-    words.forEach(word => {
-      // Extract the features needed for our ML model from each word
-      let length = word.length;
+        // Extract the features of each word for our ML model
 
-      if (word.length > 10) {
-        let syllableCount = new_count(word);
-
+        // In the dataset used, the length feature is marked as 1 if longer than 6 and 0 if not
+        let length = word.length > 6;
+        // In the dataset used, the syllables feature is marked as 1 if there are more than 2 in a word and 0 if not
+        let syllableCount = get_syllable_count(word) > 2;
         // Extract presence_of_ch, sh, th, st, or f
         let presence = word.includes("ch") || word.includes("sh") || word.includes("th") || word.includes("st") || word.includes("f") ? 1 : 0;
-
+        // Extract pronounciation of g or j
         let pronounce1 = word.includes("g") || word.includes("j") ? 1 : 0;
-
+        // Extract pronounciation of c or k
         let pronounce2 = word.includes("c") || word.includes("k") ? 1 : 0;
 
-        // Check if the text is suitable for nlp.readDoc
-        if (text && text.trim() !== '') {
-          let doc = nlp.readDoc(text);
-          let t1 = doc.tokens().itemAt(0);
-          let posValue = t1.out(nlp.its.pos);
 
-          console.log(posValue);
-          console.log(syllableCount);
-        }
-      }
+        // Use wink library to detect part of speech value in words
+        let doc = nlp.readDoc(word);
+        let t1 = doc.tokens().itemAt(0);
+        let pos = t1.out(nlp.its.pos);
 
-      // If the word is longer than 10 characters, add the span class
-      if (word.length > 10) {
-        element.innerHTML = element.innerHTML.replace(word, `<span class="blue">${word}</span>`);
+        //TODO convert pos tags to integer representation used for ML model
+        // Stand in magic number for now
+        let posValue = 1;
+
+        console.log(word, length, syllableCount, presence, posValue, pronounce1, pronounce2, get_difficulty(length, syllableCount, presence, posValue, pronounce1, pronounce2));
+
+          if (get_difficulty(length, syllableCount, presence, posValue, pronounce1, pronounce2)) {
+              // TODO integrate database to replace detected hard words
+              // Generic replacement text for now
+              return 'HardWord';
+          }
+          return word;
+      });
+
+      node.textContent = modifiedWords.join(' ');
+  } 
+  
+  // If the node has children, call the function on all of it's children
+  else if (node.nodeType === Node.ELEMENT_NODE) {
+      for (let i = 0; i < node.childNodes.length; i++) {
+          handleTextNodes(node.childNodes[i]);
       }
-    });
   }
-});
+}
+
+const rootElement = document.body;
+
+handleTextNodes(rootElement);
