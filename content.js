@@ -2,6 +2,8 @@ const winkNLP = require('wink-nlp');
 const model = require('wink-eng-lite-web-model');
 const nlp = winkNLP(model);
 
+const jsonData = require('./data.js');
+
 // Converted ML model into if-else statement
 function get_difficulty(no_of_char, syllable_count, presence_of_ch_sh_th_st_f, part_of_speech, Pronounce_c_k, pronounce_g_j) {
   if (no_of_char <= 0.50) {
@@ -90,7 +92,7 @@ function handleTextNodes(node) {
 
       // Loop through each word
       const modifiedWords = words.map(word => {
-        if (!word) {
+        if (!word || /[^a-zA-Z]/.test(words)) {
           return word;
         }
 
@@ -141,3 +143,5 @@ function handleTextNodes(node) {
 const rootElement = document.body;
 
 handleTextNodes(rootElement);
+
+console.log(jsonData.data[0]);
