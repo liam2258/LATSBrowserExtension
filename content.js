@@ -109,7 +109,8 @@ function handle_text_nodes(node) {
           node.parentNode.tagName === 'A' ||
           node.parentNode.tagName === 'CAPTION' ||
           node.parentNode.tagName === 'SPAN' ||
-          node.parentNode.tagName === 'TD')
+          node.parentNode.tagName === 'TD' || 
+          node.parentNode.tagName === 'DIV')
   ) {
 
       // Split the text content into words by space
@@ -166,4 +167,30 @@ function handle_text_nodes(node) {
   }
 }
 
-handle_text_nodes(document.body);
+function observe_DOM_changes() {
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        // Check if nodes were added or their content changed
+        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+          mutation.addedNodes.forEach(addedNode => {
+            handle_text_nodes(addedNode);
+          });
+        }
+      });
+    });
+  
+    // Configuration of the observer - observe the entire document body for changes
+    const observerConfig = {
+      childList: true,
+      subtree: true,
+    };
+  
+    // Start observing the document body
+    observer.observe(document.body, observerConfig);
+  }
+  
+  // Start observing DOM changes
+  observe_DOM_changes();
+  
+  // Initial processing of text nodes
+  handle_text_nodes(document.body);
