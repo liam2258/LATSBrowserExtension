@@ -5,7 +5,7 @@ const nlp = winkNLP(model);
 const jsonData = require('./data.js');
 
 // Function to retrieve synonym for word from database
-function findSynonym(word) {
+function find_synonym(word) {
     const firstLetter = word.charAt(0).toLowerCase();
     const lemma = word.toLowerCase();
   
@@ -14,6 +14,19 @@ function findSynonym(word) {
     } else {
       return null; // Return null if synonym not found or synonym array is empty
     }
+}
+
+function get_pos(pos) {
+    if (pos === "NOUN" || "PRON" || "PROPN") {
+        return 1;
+    }
+    if (pos === "VERB" || "ADV") {
+        return 2;
+    }
+    if (pos === "ADJ" || "ADP") {
+        return 3;
+    }
+    return 4;
 }
 
 // Converted ML model into if-else statement
@@ -82,7 +95,7 @@ function get_syllable_count(word) {
 }
 
 // Recursive function to handle each node of text from web page
-function handleTextNodes(node) {
+function handle_text_nodes(node) {
 
   // Only modify pure text nodes
   if (
@@ -126,17 +139,12 @@ function handleTextNodes(node) {
         let doc = nlp.readDoc(word);
         let t1 = doc.tokens().itemAt(0);
         let pos = t1.out(nlp.its.pos);
-
-        //TODO convert pos tags to integer representation used for ML model
-        // Stand in magic number for now
-        let posValue = 1;
-
-        
+        let posValue = get_pos(pos);
 
           if (get_difficulty(length, syllableCount, presence, posValue, pronounce1, pronounce2)) {
               // TODO integrate database to replace detected hard words
               // Generic replacement text for now
-              let synonym = findSynonym(word);
+              let synonym = find_synonym(word);
               if (synonym) {
                 console.log(word, length, syllableCount, presence, posValue, pronounce1, pronounce2, get_difficulty(length, syllableCount, presence, posValue, pronounce1, pronounce2));
                 console.log("replaced with");
@@ -153,11 +161,11 @@ function handleTextNodes(node) {
   // If the node has children, call the function on all of it's children
   else if (node.nodeType === Node.ELEMENT_NODE) {
       for (let i = 0; i < node.childNodes.length; i++) {
-          handleTextNodes(node.childNodes[i]);
+          handle_text_nodes(node.childNodes[i]);
       }
   }
 }
 
 const rootElement = document.body;
 
-handleTextNodes(rootElement);
+handle_text_nodes(rootElement);
