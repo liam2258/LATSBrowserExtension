@@ -166,6 +166,4 @@ function handle_text_nodes(node) {
   }
 }
 
-const rootElement = document.body;
-
-handle_text_nodes(rootElement);
+handle_text_nodes(document.body);
