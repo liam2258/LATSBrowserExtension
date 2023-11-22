@@ -4,6 +4,18 @@ const nlp = winkNLP(model);
 
 const jsonData = require('./data.js');
 
+// Function to retrieve synonym for word from database
+function findSynonym(word) {
+    const firstLetter = word.charAt(0).toLowerCase();
+    const lemma = word.toLowerCase();
+  
+    if (jsonData[firstLetter] && jsonData[firstLetter][lemma] && jsonData[firstLetter][lemma].length > 0) {
+      return jsonData[firstLetter][lemma][0]; // Only the first synonym
+    } else {
+      return null; // Return null if synonym not found or synonym array is empty
+    }
+}
+
 // Converted ML model into if-else statement
 function get_difficulty(no_of_char, syllable_count, presence_of_ch_sh_th_st_f, part_of_speech, Pronounce_c_k, pronounce_g_j) {
   if (no_of_char <= 0.50) {
@@ -119,12 +131,18 @@ function handleTextNodes(node) {
         // Stand in magic number for now
         let posValue = 1;
 
-        console.log(word, length, syllableCount, presence, posValue, pronounce1, pronounce2, get_difficulty(length, syllableCount, presence, posValue, pronounce1, pronounce2));
+        
 
           if (get_difficulty(length, syllableCount, presence, posValue, pronounce1, pronounce2)) {
               // TODO integrate database to replace detected hard words
               // Generic replacement text for now
-              return 'HardWord';
+              let synonym = findSynonym(word);
+              if (synonym) {
+                console.log(word, length, syllableCount, presence, posValue, pronounce1, pronounce2, get_difficulty(length, syllableCount, presence, posValue, pronounce1, pronounce2));
+                console.log("replaced with");
+                console.log(synonym);
+                return synonym;
+              }
           }
           return word;
       });
@@ -143,5 +161,3 @@ function handleTextNodes(node) {
 const rootElement = document.body;
 
 handleTextNodes(rootElement);
-
-console.log(jsonData.data[0]);
