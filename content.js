@@ -94,6 +94,10 @@ function get_syllable_count(word) {
   }
 }
 
+function isFirstLetterCapitalized(word) {
+  return word[0] === word[0].toUpperCase();
+}
+
 // Recursive function to handle each node of text from web page
 function handle_text_nodes(node) {
 
@@ -147,6 +151,9 @@ function handle_text_nodes(node) {
               // Generic replacement text for now
               let synonym = find_synonym(word);
               if (synonym) {
+                if (isFirstLetterCapitalized(word)) {
+                  synonym = synonym.charAt(0).toUpperCase() + synonym.slice(1);
+                }
                 console.log(word, length, syllableCount, presence, posValue, pronounce1, pronounce2, get_difficulty(length, syllableCount, presence, posValue, pronounce1, pronounce2));
                 console.log("replaced with");
                 console.log(synonym);
