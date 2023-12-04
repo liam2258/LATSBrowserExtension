@@ -4,29 +4,17 @@ const nlp = winkNLP(model);
 
 const jsonData = require('./data.js');
 
-// Function to retrieve synonym for word from database
-function find_synonym(word) {
-    const firstLetter = word.charAt(0).toLowerCase();
-    const lemma = word.toLowerCase();
-  
-    if (jsonData[firstLetter] && jsonData[firstLetter][lemma] && jsonData[firstLetter][lemma].length > 0) {
-      return jsonData[firstLetter][lemma][0]; // Only the first synonym
-    } else {
-      return null; // Return null if synonym not found or synonym array is empty
-    }
-}
-
 function get_pos(pos) {
-    if (pos === "NOUN" || "PRON" || "PROPN") {
-        return 1;
-    }
-    if (pos === "VERB" || "ADV") {
-        return 2;
-    }
-    if (pos === "ADJ" || "ADP") {
-        return 3;
-    }
-    return 4;
+  if (pos === "NOUN" || "PRON" || "PROPN") {
+      return 1;
+  }
+  if (pos === "VERB" || "ADV") {
+      return 2;
+  }
+  if (pos === "ADJ" || "ADP") {
+      return 3;
+  }
+  return 4;
 }
 
 // Converted ML model into if-else statement
@@ -98,106 +86,100 @@ function isFirstLetterCapitalized(word) {
   return word[0] === word[0].toUpperCase();
 }
 
-// Recursive function to handle each node of text from web page
-function handle_text_nodes(node) {
+function find_synonym(word) {
+  const firstLetter = word.charAt(0).toLowerCase();
+  const lemma = word.toLowerCase();
 
-  // Only modify pure text nodes
-  if (
-      node.nodeType === Node.TEXT_NODE &&
-      (node.parentNode.tagName === 'H1' ||
-          node.parentNode.tagName === 'H2' ||
-          node.parentNode.tagName === 'H3' ||
-          node.parentNode.tagName === 'H4' ||
-          node.parentNode.tagName === 'H5' ||
-          node.parentNode.tagName === 'P' ||
-          node.parentNode.tagName === 'A' ||
-          node.parentNode.tagName === 'CAPTION' ||
-          node.parentNode.tagName === 'SPAN' ||
-          node.parentNode.tagName === 'TD' || 
-          node.parentNode.tagName === 'DIV')
-  ) {
-
-      // Split the text content into words by space
-      const words = node.textContent.split(/\s+/);
-
-      // Loop through each word
-      const modifiedWords = words.map(word => {
-        if (!word || /[^a-zA-Z]/.test(words)) {
-          return word;
-        }
-
-        // Extract the features of each word for our ML model
-
-        // In the dataset used, the length feature is marked as 1 if longer than 6 and 0 if not
-        let length = word.length > 6;
-        // In the dataset used, the syllables feature is marked as 1 if there are more than 2 in a word and 0 if not
-        let syllableCount = get_syllable_count(word) > 2;
-        // Extract presence_of_ch, sh, th, st, or f
-        let presence = word.includes("ch") || word.includes("sh") || word.includes("th") || word.includes("st") || word.includes("f") ? 1 : 0;
-        // Extract pronounciation of g or j
-        let pronounce1 = word.includes("g") || word.includes("j") ? 1 : 0;
-        // Extract pronounciation of c or k
-        let pronounce2 = word.includes("c") || word.includes("k") ? 1 : 0;
-
-
-        // Use wink library to detect part of speech value in words
-        let doc = nlp.readDoc(word);
-        let t1 = doc.tokens().itemAt(0);
-        let pos = t1.out(nlp.its.pos);
-        let posValue = get_pos(pos);
-
-          if (get_difficulty(length, syllableCount, presence, posValue, pronounce1, pronounce2)) {
-              // TODO integrate database to replace detected hard words
-              // Generic replacement text for now
-              let synonym = find_synonym(word);
-              if (synonym) {
-                if (isFirstLetterCapitalized(word)) {
-                  synonym = synonym.charAt(0).toUpperCase() + synonym.slice(1);
-                }
-                console.log(word, length, syllableCount, presence, posValue, pronounce1, pronounce2, get_difficulty(length, syllableCount, presence, posValue, pronounce1, pronounce2));
-                console.log("replaced with");
-                console.log(synonym);
-                return synonym;
-              }
-          }
-          return word;
-      });
-
-      node.textContent = modifiedWords.join(' ');
-  } 
-  
-  // If the node has children, call the function on all of it's children
-  else if (node.nodeType === Node.ELEMENT_NODE) {
-      for (let i = 0; i < node.childNodes.length; i++) {
-          handle_text_nodes(node.childNodes[i]);
-      }
+  if (jsonData[firstLetter] && jsonData[firstLetter][lemma] && jsonData[firstLetter][lemma].length > 0) {
+    synonym = jsonData[firstLetter][lemma][0]; // Only the first synonym
+    if (isFirstLetterCapitalized(word)) {
+      synonym = synonym.charAt(0).toUpperCase() + synonym.slice(1);
+    }
+      console.log(word);
+      console.log("replaced by:");
+      console.log(synonym);
+    return synonym;
+  } else {
+    return word; // Return original word if synonym not found or synonym array is empty
   }
 }
 
-function observe_DOM_changes() {
-    const observer = new MutationObserver(mutations => {
-      mutations.forEach(mutation => {
-        // Check if nodes were added or their content changed
-        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-          mutation.addedNodes.forEach(addedNode => {
-            handle_text_nodes(addedNode);
-          });
-        }
-      });
+function valid_swap(word) {
+      let length = word.length > 6;
+      // In the dataset used, the syllables feature is marked as 1 if there are more than 2 in a word and 0 if not
+      let syllableCount = get_syllable_count(word) > 2;
+      // Extract presence_of_ch, sh, th, st, or f
+      let presence = word.includes("ch") || word.includes("sh") || word.includes("th") || word.includes("st") || word.includes("f") ? 1 : 0;
+      // Extract pronounciation of g or j
+      let pronounce1 = word.includes("g") || word.includes("j") ? 1 : 0;
+      // Extract pronounciation of c or k
+      let pronounce2 = word.includes("c") || word.includes("k") ? 1 : 0;
+
+
+      // Use wink library to detect part of speech value in words
+      let doc = nlp.readDoc(word);
+      if (!doc) {
+        return false; // If the document doesn't exist, return false
+      }
+
+      let t1 = doc.tokens().itemAt(0);
+      if (!t1) {
+        return false; // If the token doesn't exist, return false
+      }
+
+      let pos = t1.out(nlp.its.pos);
+      if (!pos) {
+        return false; // If the POS doesn't exist, return false
+      }
+
+      let posValue = get_pos(pos);
+      // Assuming get_pos() returns a value; you can handle its existence if necessary
+
+
+      if (get_difficulty(length, syllableCount, presence, posValue, pronounce1, pronounce2)) {
+            return true;
+          }
+          return false;
+      }
+
+function replaceWordsInSpecifiedTags() {
+  const allowedTags = ['H1', 'H2', 'H3', 'H4', 'H5', 'P', 'A', 'CAPTION', 'SPAN', 'TD'];
+
+  allowedTags.forEach(tag => {
+    const elements = document.getElementsByTagName(tag);
+    Array.from(elements).forEach(element => {
+      const textNodes = getTextNodesWithinElement(element);
+      textNodes.forEach(node => {
+        const words = node.nodeValue.split(/\s+/);
+        const replacedWords = words.map(word => {
+            if (valid_swap(word)) {
+                return find_synonym(word); // Replace with synonym if word is shorter than length 6
+            } else {
+                return word; // Keep the word unchanged if its length is 6 or greater
+            }
+        }).join(' ');
+        node.nodeValue = replacedWords;
     });
-  
-    // Configuration of the observer - observe the entire document body for changes
-    const observerConfig = {
-      childList: true,
-      subtree: true,
-    };
-  
-    // Start observing the document body
-    observer.observe(document.body, observerConfig);
+    });
+  });
+}
+
+function getTextNodesWithinElement(element) {
+  const walker = document.createTreeWalker(
+    element,
+    NodeFilter.SHOW_TEXT,
+    null,
+    false
+  );
+
+  const textNodes = [];
+  let node;
+
+  while ((node = walker.nextNode())) {
+    textNodes.push(node);
   }
-  
-  // Start observing DOM changes
-  observe_DOM_changes();
-  
-  // Initial processing of text nodes
-  handle_text_nodes(document.body);
+
+  return textNodes;
+}
+
+replaceWordsInSpecifiedTags();
