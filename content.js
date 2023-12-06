@@ -91,18 +91,40 @@ function find_synonym(word) {
   const lemma = word.toLowerCase();
 
   if (jsonData[firstLetter] && jsonData[firstLetter][lemma] && jsonData[firstLetter][lemma].length > 0) {
-    synonym = jsonData[firstLetter][lemma][0]; // Only the first synonym
-    if (isFirstLetterCapitalized(word)) {
-      synonym = synonym.charAt(0).toUpperCase() + synonym.slice(1);
-    }
+    let synonym = jsonData[firstLetter][lemma][0]; // Only the first synonym
+
+    // Check if the word ends in "ing" or "ed"
+    const endsInIng = lemma.endsWith("ing");
+    const endsInEd = lemma.endsWith("ed");
+
+    if (endsInIng || endsInEd) {
+      // Check if the synonym ends in "ing" or "ed"
+      const synonymEndsInIng = synonym.toLowerCase().endsWith("ing");
+      const synonymEndsInEd = synonym.toLowerCase().endsWith("ed");
+
+      // Check if the synonym isn't the same as the word and doesn't have the same suffix
+      if (synonym === word || ((endsInIng && !synonymEndsInIng) || (endsInEd && !synonymEndsInEd))) {
+        return word;
+      }
+    } else {
+      if (isFirstLetterCapitalized(word)) {
+        synonym = synonym.charAt(0).toUpperCase() + synonym.slice(1);
+      }
+      if (synonym === word) {
+        return word;
+      }
       console.log(word);
       console.log("replaced by:");
       console.log(synonym);
-    return synonym;
-  } else {
-    return word; // Return original word if synonym not found or synonym array is empty
+      return synonym;
+    }
   }
+
+  return word; // Return original word if synonym not found or synonym array is empty
 }
+
+
+
 
 function valid_swap(word) {
       let length = word.length > 6;
@@ -153,9 +175,9 @@ function replaceWordsInSpecifiedTags() {
         const words = node.nodeValue.split(/\s+/);
         const replacedWords = words.map(word => {
             if (valid_swap(word)) {
-                return find_synonym(word); // Replace with synonym if word is shorter than length 6
+                return find_synonym(word);
             } else {
-                return word; // Keep the word unchanged if its length is 6 or greater
+                return word;
             }
         }).join(' ');
         node.nodeValue = replacedWords;
