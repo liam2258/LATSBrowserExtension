@@ -18,13 +18,13 @@ function get_pos(pos) {
 }
 
 // Converted ML model into if-else statement
-function get_difficulty(no_of_char, syllable_count, presence_of_ch_sh_th_st_f, part_of_speech, Pronounce_c_k, pronounce_g_j) {
+function get_difficulty(no_of_char, syllable_count, presence_of_ch_sh_th_st_f, part_of_speech, pronounce_c_k, pronounce_g_j) {
   if (no_of_char <= 0.50) {
       if (syllable_count <= 0.50) {
           if (presence_of_ch_sh_th_st_f <= 0.50) {
               return 0;
           } else {
-              if (Pronounce_c_k <= 0.50) {
+              if (pronounce_c_k <= 0.50) {
                   return 0;
               } else {
                   return 1;
@@ -44,7 +44,7 @@ function get_difficulty(no_of_char, syllable_count, presence_of_ch_sh_th_st_f, p
   } else {
       if (syllable_count <= 0.50) {
           if (presence_of_ch_sh_th_st_f <= 0.50) {
-              if (Pronounce_c_k <= 0.50) {
+              if (pronounce_c_k <= 0.50) {
                   if (part_of_speech <= 1.50) {
                       return 0;
                   } else {
