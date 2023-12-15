@@ -94,6 +94,8 @@ function find_synonym(word) {
     let synonym = jsonData[firstLetter][lemma][0]; // Only the first synonym
 
     // Check if the word ends in "ing" or "ed"
+    // This is a temporary fix to improve contex swaps for words
+    // TODO proper solution by refractoring database
     const endsInIng = lemma.endsWith("ing");
     const endsInEd = lemma.endsWith("ed");
 
